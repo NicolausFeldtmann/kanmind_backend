@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'user_auth_app',
     'boards_app',
+    'task_app',
 ]
 
 MIDDLEWARE = [
