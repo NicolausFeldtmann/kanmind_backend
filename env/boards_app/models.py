@@ -7,7 +7,7 @@ class BoardMember(models.Model):
     email = models.EmailField(max_length=50, blank=True, null=True)
     
     def __str__(self):
-        return f"{self.user.username} {self.board.title}"
+        return f"{self.user.username} ({self.board.title})"
     
 class Board(models.Model):
     title = models.CharField(max_length=30)

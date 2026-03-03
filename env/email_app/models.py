@@ -7,4 +7,4 @@ class UserEmail(models.Model):
     usermail = models.EmailField(max_length=50)
     
     def __str__(self):
-        return self.email
+        return self.usermail

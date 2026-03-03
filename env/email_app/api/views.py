@@ -4,7 +4,7 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from .serializers import UserEmailSerializers
 
-User = get_user_model
+User = get_user_model()
 
 class UserEmailViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
@@ -14,7 +14,7 @@ class UserEmailViewSet(viewsets.ReadOnlyModelViewSet):
         email = request.query_params.get("email")
         if email:
             try:
-                user = User.objects.get(email__iewxact=email)
+                user = User.objects.get(email__iexact=email)
             except User.DoesNotExist:
                 return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
             serializer = self.get_serializer(user)

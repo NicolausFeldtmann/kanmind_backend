@@ -30,9 +30,17 @@ class CommentSerializer(serializers.ModelSerializer):
     
 class TaskSerializer(serializers.ModelSerializer):
     assignee = UserFullnameSerializer(read_only = True)
-    reviwer = UserFullnameSerializer(read_only = True)
+    reviewer = UserFullnameSerializer(read_only = True)
     
     assignee_id = serializers.PrimaryKeyRelatedField(
+        source = "assignee",
+        queryset = User.objects.all(),
+        write_only = True,
+        required = False,
+        allow_null = True
+    )
+    
+    reviewer_id = serializers.PrimaryKeyRelatedField(
         source = "reviewer",
         queryset = User.objects.all(),
         write_only = True,
@@ -43,13 +51,18 @@ class TaskSerializer(serializers.ModelSerializer):
     comments_count = serializers.IntegerField(read_only = True)
     
     class Meta:
-        model = Comment
-        fields = ["id", "author", "content", "created_at"]
-        
-    def get_author(self, obj):
-        return obj.author.get_full_name() or obj.author.username
-    
-    def create(self, validated_data):
-        request = self.context.get("request")
-        user = request.user if request else None
-        return Comment.objects.create(author=user, **validated_data)
+        model = Task
+        fields = [
+            "id",
+            "board",
+            "title",
+            "description",
+            "status",
+            "priority",
+            "due_date",
+            "assignee",
+            "reviewer",
+            "assignee_id",
+            "reviewer_id",
+            "comments_count"
+        ]
