@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+# Class to define a board member
 class BoardMember(models.Model):
     name = models.CharField(max_length=30)
     user = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -9,6 +10,7 @@ class BoardMember(models.Model):
     def __str__(self):
         return f"{self.user.username} ({self.board.title})"
     
+# Class to define a board
 class Board(models.Model):
     title = models.CharField(max_length=30)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="owned_boards")

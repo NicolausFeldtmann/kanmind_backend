@@ -6,10 +6,12 @@ from .serializers import UserEmailSerializers
 
 User = get_user_model()
 
+# View suports GET request
 class UserEmailViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserEmailSerializers
     
+    # Checks if the specified email address exists. If not, an error message will be returned.
     def list(self, request, *args, **kwargs):
         email = request.query_params.get("email")
         if email:
@@ -19,7 +21,6 @@ class UserEmailViewSet(viewsets.ReadOnlyModelViewSet):
                 return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
             serializer = self.get_serializer(user)
             return Response(serializer.data)
-        
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)

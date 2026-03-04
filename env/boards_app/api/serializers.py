@@ -3,6 +3,7 @@ from boards_app.models import Board
 from django.contrib.auth.models import User
 from task_app.api.serializers import TaskSerializer
 
+# Serializer for defining a compact user output
 class UserShortSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
     
@@ -13,6 +14,7 @@ class UserShortSerializer(serializers.ModelSerializer):
     def get_fullname(self, obj):
         return obj.get_full_name() or obj.username
         
+# Serializer for managing and creating boards
 class BoardSerializer(serializers.ModelSerializer):
     members = UserShortSerializer(many=True, read_only=True)
     member_ids = serializers.PrimaryKeyRelatedField(
@@ -37,7 +39,8 @@ class BoardSerializer(serializers.ModelSerializer):
             "ticket_count", "tasks_to_do_count", "tasks_high_prio_count"
         ]
         read_only_fields = ["owner"]
-        
+     
+    # Converts incoming data to enable the transfer of user IDs.    
     def to_internal_value(self, data):
         data = data.copy()
         if "members" in data and "members:ids" not in data:
@@ -45,11 +48,10 @@ class BoardSerializer(serializers.ModelSerializer):
                 members_value = data.getlist("members")
             except AttributeError:
                 members_value = data["members"]
-            
             data["member_ids"] = members_value
-            
         return super().to_internal_value(data)
-        
+    
+    # Create a board including members and the owner.   
     def create(self, validated_data):
         members = validated_data.pop("members", None)
         request = self.context.get("request")
@@ -57,12 +59,12 @@ class BoardSerializer(serializers.ModelSerializer):
         board = Board.objects.create(owner=owner, **validated_data)
         
         if members:
-            board.members.set(members)
-            
+            board.members.set(members)    
         if owner and not board.members.filter(pk=owner.pk).exists():
             board.members.add(owner)
         return board
     
+    # Enables a board update
     def update(self, instance, validated_data):
         members = validated_data.pop("members", None)
         

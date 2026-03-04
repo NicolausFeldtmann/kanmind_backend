@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from boards_app.models import Board
 
+# Defines tasks. Includes title, description, assignee, reviewer, creation date, priority, and status
 class Task(models.Model):
     STATUS_CHOICES = [
         ("to-do", "To DO"),
@@ -30,7 +31,8 @@ class Task(models.Model):
     
     def __str__(self):
         return self.title
-    
+
+# Defines a comment. Includes associated task, author, time of post, and content.
 class Comment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="task_comments")
