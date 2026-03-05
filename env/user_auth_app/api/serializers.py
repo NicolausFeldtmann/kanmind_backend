@@ -30,15 +30,15 @@ class RegistrationSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
         
     # Assures that email is not already taken
-    def validated_email(self, value):
-        if User.objects.filter(email__iiexact = value).exists():
-            raise serializers.ValidationError({"Email already in use."})
+    def validate_email(self, value):
+        if User.objects.filter(email__iexact = value).exists():
+            raise serializers.ValidationError({"errpr": "Email already in use."})
         return value
     
     # Assurdes that password and repeated password match.
     def validate(self, data):
         if data.get("password") != data.get("repeated_password"):
-            return serializers.ValidationError("Passwords don't match.")
+            return serializers.ValidationError({"error": "Passwords don't match."})
         return data
     
     # Creates Userprofile containing previously validated infromations.
@@ -62,20 +62,19 @@ class RegistrationSerializer(serializers.ModelSerializer):
 # Assures that password and email are valid
 class EmailAuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(style={"input_type": "password"}, trim_whitespace=False)
+    password = serializers.CharField(style={"input_type": "password"}, trim_whitespace = False)
     
-    # Vlaidates given email and password
     def validate(self, attrs):
         email = attrs.get("email")
         password = attrs.get("password")
         
         try:
-            user = User.objects.get(email__iexact=email)
+            user = User.objects.get(email__iexact = email)
         except User.DoesNotExist:
-            return serializers.ValidationError("Invalid acces")
+            raise serializers.ValidationError({"error": "Invalid access"})
         
         if not user.check_password(password):
-            raise serializers.ValidationError("invalid acces")
+            raise serializers.ValidationError({"error": "Invalid access"})
         
         attrs["user"] = user
         return attrs
