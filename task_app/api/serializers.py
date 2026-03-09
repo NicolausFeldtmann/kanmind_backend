@@ -1,39 +1,32 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from task_app.models import Task, Comment
-from django.db.models import Count
 
-# Serializer for definig addable User
 class UserFullnameSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ["id", "email", "fullname"]
-        
-    # Get Fullname or stored username
-    def get_fullname(self, obj):
-        return obj.get_full_name() or obj.username
     
-# Serializer for definig comments
+    def get_fullname(self, obj):
+        return  obj.get_full_name() or obj.username
+    
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField(read_only=True)
+    author = serializers.SerializerMethodField(read_only = True)
     
     class Meta:
         model = Comment
         fields = ["id", "author", "content", "created_at"]
         
-    # Get fullname or stored username as comment author.
     def get_author(self, obj):
         return obj.author.get_full_name() or obj.author.username
     
-    # Creats comment
     def create(self, validated_data):
         request = self.context.get("request")
         user = request.user if request else None
-        return Comment.objects.create(author=user, **validated_data)
+        return Comment.objects.create(author = user, **validated_data)
     
-# Serializer for defining tasks
 class TaskSerializer(serializers.ModelSerializer):
     assignee = UserFullnameSerializer(read_only = True)
     reviewer = UserFullnameSerializer(read_only = True)
@@ -54,7 +47,7 @@ class TaskSerializer(serializers.ModelSerializer):
         allow_null = True
     )
     
-    comments_count = serializers.IntegerField(read_only = True)
+    comments_count = serializers.SerializerMethodField(read_only = True)
     
     class Meta:
         model = Task
@@ -70,5 +63,10 @@ class TaskSerializer(serializers.ModelSerializer):
             "reviewer",
             "assignee_id",
             "reviewer_id",
-            "comments_count"
+            "comments_count",
         ]
+        
+    def get_comments_count(self, obj):
+        return getattr(obj, "comments_count", None) or obj.comments.count()
+    
+        
