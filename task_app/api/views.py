@@ -18,29 +18,18 @@ class TaskListView(generics.ListCreateAPIView):
         )
         
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data = request.data)
-        if not serializer.is_valid():
-            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        
+        serializer = self.get_serializer(data =request.data)
+        serializer.is_valid(raise_exception = True)
         board_id = request.data.get("board")
-        if board_id is None:
-            return Response({"error": "Invalid request data"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            board = Board.objects.get(pk = board_id)
+        if board_id is None: return Response({"error": "Invalid request data"}, status=status.HTTP_400_BAD_REQUEST)
+        try:board = Board.objects.get(pk = board_id)
         except Board.DoesNotExist:
-            return Response({"error": "Board not found."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        user = request.user
-        
-        if not board.members.filter(pk = user.pk).exists():
-            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
-        
-        try:
-            self.perform_create(serializer, board = board)
+            return Response({"error": "Board not found"}, status=status.HTTP_404_NOT_FOUND)
+        if not board.members.filter(pk = request.user.pk).exists():
+            return Response({"error": "Access denied."}, status=status.HTTP_403_FORBIDDEN)
+        try: self.perform_create(serializer, board =board)
         except Exception:
             return Response({"error": "Intern server problem"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers = headers)
     
