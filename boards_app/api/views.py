@@ -7,6 +7,7 @@ from .serializers import BoardSerializer
 from .permissions import IsBoardMember
 
 class BoardList(generics.ListCreateAPIView):
+    queryset = Board.objects.all()
     serializer_class = BoardSerializer
     permission_classes = [IsAuthenticated]
     

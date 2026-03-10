@@ -8,9 +8,9 @@ class UserFullnameSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "email", "fullname"]
-    
+        
     def get_fullname(self, obj):
-        return  obj.get_full_name() or obj.username
+        return obj.get_full_name() or obj.username
     
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField(read_only = True)
@@ -63,10 +63,8 @@ class TaskSerializer(serializers.ModelSerializer):
             "reviewer",
             "assignee_id",
             "reviewer_id",
-            "comments_count",
+            "comments_count"
         ]
         
     def get_comments_count(self, obj):
         return getattr(obj, "comments_count", None) or obj.comments.count()
-    
-        

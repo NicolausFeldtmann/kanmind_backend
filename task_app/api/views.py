@@ -1,29 +1,15 @@
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from task_app.models import Task, Comment
 from django.db.models import Count
+from task_app.models import Task, Comment
+from boards_app.models import Board
 from .serializers import TaskSerializer, CommentSerializer
-from .permissions import IsStaffOrReadOnly, IsAdminForDeleteOrPatchAndReadOnly, IsOwnerOrAdmin
 
-# View suports GET and POST request
 class TaskListView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
     
-    # Delivers task Query
-    def get_queryset(self):
-        return (
-            Task.objects.all()
-            .select_related("assignee", "reviewer", "board")
-            .annotate(comments_count = Count("comments", distinct=True))
-        )
-    
-# View suports GET, POST/UPDATE, DELETE request for single tasks.    
-class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
-    
-    # Deliver task query
     def get_queryset(self):
         return (
             Task.objects.all()
@@ -31,64 +17,95 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
             .annotate(comments_count = Count("comments", distinct=True))
         )
         
-# View suports GET requestfor tasks, user is member of.
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data = request.data)
+        if not serializer.is_valid():
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        board_id = request.data.get("board")
+        if board_id is None:
+            return Response({"error": "Invalid request data"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            board = Board.objects.get(pk = board_id)
+        except Board.DoesNotExist:
+            return Response({"error": "Board not found."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+        
+        if not board.members.filter(pk = user.pk).exists():
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            self.perform_create(serializer, board = board)
+        except Exception:
+            return Response({"error": "Intern server problem"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers = headers)
+    
+    def perform_create(self, serializer, board = None):
+        serializer.save(board = board)
+        
+class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return (
+            Task.objects.all()
+            .select_related("assignee", "reviewer", "board")
+            .annotate(comments_count = Count("comments", distinct=True))
+        )
+        
 class AssignedToMeList(generics.ListAPIView):
     serializer_class = TaskSerializer
     
-    # Deliver for user relevant querys
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Task.objects.none()
+        return (
+            Task.objects.filter(assignee = user)
+            .select_related("assignee", "reviewer", "board")
+            .annotate(comments_count = Count("comments", distinct=True))
+        )
+        
+class TaskReviewerList(generics.ListAPIView):
+    serializer_class = TaskSerializer
+    
     def get_queryset(self):
         user = self.request.user
         if not user.is_authenticated:
             return Task.objects.none()
         return(
-            Task.objects.filter(assignee = user)
-            .select_related("assignee", "reviewer", "board")
-            .annotate(comments_count=Count("comments", distinct=True))
-        )
-    
-# View suports GET requestfor tasks, user is member of.
-class TaskReviewList(generics.ListAPIView):
-    serializer_class = TaskSerializer
-    
-    # Deliver for user relevant querys
-    def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return Task.objects.none()
-        return (
-            Task.objects.filter(reviewer = user)
+            Task.objects.filter(reviwer = user)
             .select_related("assignee", "reviewer", "board")
             .annotate(comments_count = Count("comments", distinct=True))
         )
         
-# View suports GET and POST requests for comments
 class CommentListCreateView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
     
-    # Delivers for task relevant query
     def get_queryset(self):
         task_id = self.kwargs["task_id"]
-        return Comment.objects.filter(task_id=task_id).order_by("created_at")
+        return Comment.objects.filter(task_id = task_id).order_by("created_at")
     
-    # Extends the context to include the current request
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
         ctx["request"] = self.request
         return ctx
     
-    # Creates comment for relevant task
     def perform_create(self, serializer):
         task_id = self.kwargs["task_id"]
-        serializer.save(task_id=task_id)
- 
-# View suports DELETE request for comments       
+        serializer.save(task_id = task_id)
+        
 class CommentDeleteView(generics.DestroyAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
     lookup_url_kwarg = "comment_id"
     
-    # Extends the context to include the current request
     def get_queryset(self):
         task_id = self.kwargs["task_id"]
-        return Comment.objects.filter(task_id=task_id)
+        return Comment.objects.filter(task_id = task_id)
