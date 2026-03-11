@@ -3,23 +3,19 @@ from rest_framework import serializers
 from user_auth_app.models import UserProfile
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from itertools import count
 
 User = get_user_model()
 
-# Defines User Profile and containing informations.
 class UserProfileSerializer(serializers.ModelSerializer):
-    full_name = serializers.SerializerMethodField(read_only = True)
+    fullname = serializers.SerializerMethodField(read_only = True)
     
     class Meta:
         model = UserProfile
         fields = ["user", "email", "first_name", "last_name", "full_name"]
         
-    # returns the full username.
-    def get_full_name(self, obj):
-        return obj.full_name()
-   
-# Definies all necessary informations to create an account.
+        def get_full_name(self, obj):
+            return obj.full_name()
+        
 class RegistrationSerializer(serializers.ModelSerializer):
     repeated_password = serializers.CharField(write_only = True)
     fullname = serializers.CharField(write_only = True)
@@ -29,37 +25,48 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ["fullname", "email", "password", "repeated_password"]
         extra_kwargs = {"password": {"write_only": True}}
         
-    # Assures that email is not already taken
     def validate_email(self, value):
         if User.objects.filter(email__iexact = value).exists():
-            raise serializers.ValidationError({"errpr": "Email already in use."})
+            raise serializers.ValidationError({"Email already in use."})
         return value
     
-    # Assurdes that password and repeated password match.
     def validate(self, data):
         if data.get("password") != data.get("repeated_password"):
-            return serializers.ValidationError({"error": "Passwords don't match."})
+            raise serializers.ValidationError({"Passwords don't match."})
         return data
     
-    # Creates Userprofile containing previously validated infromations.
     def create(self, validated_data):
         fullname = validated_data.pop("fullname", "").strip()
-        first_name, last_name = (fullname.split(None, 1) + [""])[:2]
+        parts = fullname.split()
+        first_name = parts[0] if parts else ""
+        last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
         email = validated_data.pop("email")
         password = validated_data.pop("password")
-        base = slugify(f"{first_name} {last_name}") or slugify(email.split("@", 1)[0])
-        username = base
-        for i in count(1):
-            if not User.objects.filter(username = username).exists():
-                break
-            username = f"{base}{i}"
-        user = User(first_name=first_name, last_name=last_name, email=email, username=username)
+        base_name = slugify(f"{first_name} {last_name}") or slugify(email.split("@")[0])
+        username = base_name
+        counter = 1
+        while User.objects.filter(username = username).exists():
+            username = f"{base_name}{counter}"
+            counter += 1
+        
+        user = User(
+            first_name = first_name,
+            last_name = last_name,
+            email = email,
+            username = username            
+        )
         user.set_password(password)
         user.save()
-        UserProfile.objects.create(user=user, first_name=first_name, last_name=last_name, email=email)
+        
+        UserProfile.objects.create(
+            user = user,
+            first_name = first_name,
+            last_name = last_name,
+            username = username,
+            email = email
+        )
         return user
-
-# Assures that password and email are valid
+    
 class EmailAuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(style={"input_type": "password"}, trim_whitespace = False)
@@ -71,10 +78,9 @@ class EmailAuthSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email__iexact = email)
         except User.DoesNotExist:
-            raise serializers.ValidationError({"error": "Invalid access"})
-        
+            raise serializers.ValidationError({"invalid access"})
         if not user.check_password(password):
-            raise serializers.ValidationError({"error": "Invalid access"})
+            raise serializers.ValidationError({"Invalid access"})
         
         attrs["user"] = user
         return attrs

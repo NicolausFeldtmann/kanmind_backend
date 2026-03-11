@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 class IsStaffOrReadOnly(BasePermission):
     def has_permission(self, request, view):
-        is_staff = bool(request.user and request.user.is_Staff)
+        is_staff = bool(request.user and request.user.is_staff)
         return is_staff or request.method in SAFE_METHODS
     
 class IsAdminForDeleteOrPatchAndReadOnly(BasePermission):
@@ -23,7 +23,7 @@ class IsOwnerOrAdmin(BasePermission):
         elif request.method == "DELETE":
             return bool(request.user and request.user.is_superuser)
         else:
-            return bool(request.user and request.user == obj.user)
+            return bool(request.user and request.user == obj.owner)
         
 class IsBoardMember(BasePermission):
     
