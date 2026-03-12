@@ -3,8 +3,9 @@ from django.contrib.auth.models import User
 
 # Class to define a board member
 class BoardMember(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    board = models.ForeignKey('boards_app.Board', on_delete=models.CASCADE, default="")
     name = models.CharField(max_length=30)
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
     email = models.EmailField(max_length=50, blank=True, null=True)
     
     def __str__(self):

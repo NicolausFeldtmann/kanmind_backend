@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import BasePermission,  SAFE_METHODS
 
 class IsStaffOrReadOnly(BasePermission):
     def has_permission(self, request, view):
@@ -29,12 +29,10 @@ class IsBoardMember(BasePermission):
     
     def has_object_permission(self, request, view, obj):
         user = request.user
-        if request.method in SAFE_METHODS:
-            return True
-        elif not user or not user.is_authenticated:
+        if not user or not user.is_authenticated:
             return False
-        elif user.is_superuser or user.is_staff:
+        if user.is_superuser or user.is_staff:
             return True
-        elif getattr(obj, "owner_id", None) == user.id:
+        if getattr(obj, "owner_id", None) == user.id:
             return True
         return obj.members.filter(pk=user.pk).exists()

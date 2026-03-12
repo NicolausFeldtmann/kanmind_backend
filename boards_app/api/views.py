@@ -35,16 +35,9 @@ class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BoardSerializer
     permission_classes = [IsAuthenticated, IsBoardMember]
     
-    def get_object_or_404(self):
-        try:
-            return Board.objects.get(pk = self.kwargs.get(self.lookup_field or "pk"))
-        except Board.DoesNotExist:
-            raise NotFound()
-        
     def retrieve(self, request, *args, **kwargs):
         try:
-            obj = self.get_object_or_404()
-            self.check_object_permissions(request, obj)
+            obj = self.get_object()
         except PermissionDenied:
             return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
         except NotFound:
@@ -55,14 +48,13 @@ class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
     
     def update(self, request, *args, **kwargs):
         try:
-            obj = self.get_object_or_404()
-            self.check_object_permissions(request, obj)
+            obj = self.get_object()
         except PermissionDenied:
-            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error", "Acces denied"}, status=status.HTTP_403_FORBIDDEN)
         except NotFound:
-            return Response({"error": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = self.get_serializer(obj, data = request.data, partial=kwargs.get("partial", False))
+        serializer = self.get_serializer(obj, data = request.data, partial = kwargs.get("partial", False))
         if serializer.is_valid():
             self.perform_update(serializer)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -70,12 +62,11 @@ class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
     
     def destroy(self, request, *args, **kwargs):
         try:
-            obj = self.get_object_or_404()
-            self.check_object_permissions(request, obj)
+            obj = self.get_object()
         except PermissionDenied:
             return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
         except NotFound:
-            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
         self.perform_destroy(obj)
         return Response(status=status.HTTP_204_NO_CONTENT)

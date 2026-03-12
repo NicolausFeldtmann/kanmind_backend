@@ -50,7 +50,7 @@ class CustomLoginView(ObtainAuthToken):
             fullname = f"{user.first_name} {user.last_name}"
             data = {"token": token.key, "user_id": user.id, "username": user.username, "email": user.email, "fullname": fullname}
         else:
-            return Response({"message": "error"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Wrong emai or password"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
     
 # View suports GEr requests
