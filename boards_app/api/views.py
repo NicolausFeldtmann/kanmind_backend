@@ -19,7 +19,7 @@ class BoardList(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": serializer.errors}, status=status.HTTP_401_UNAUTHORIZED)
         
         try:
             self.perform_create(serializer)
@@ -58,7 +58,7 @@ class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
         if serializer.is_valid():
             self.perform_update(serializer)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
     
     def destroy(self, request, *args, **kwargs):
         try:
@@ -69,4 +69,4 @@ class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
         self.perform_destroy(obj)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_404_NOT_FOUND)

@@ -9,7 +9,7 @@ class UserEmailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["id", "username", "email", "fullname"]
+        fields = ["id", "email", "fullname"]
         
     def get_fullname(self, obj):
         return obj.get_full_name() or obj.username
