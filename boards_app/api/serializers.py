@@ -4,6 +4,16 @@ from django.contrib.auth.models import User
 from task_app.api.serializers import TaskSerializer
 from email_app.api.serializers import UserEmailSerializer
 
+class SimpleUserSerializer(serializers.ModelSerializer):
+    fullname = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ["id", "email", "fullname"]
+        
+    def get_fullname(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip()
+
 class BoardUserSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
     
@@ -12,38 +22,17 @@ class BoardUserSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "fullname"]
 
 class BoardSerializer(serializers.ModelSerializer):
-    members = serializers.PrimaryKeyRelatedField(
-        queryset = User.objects.all(),
-        many = True,
-        required = False
-    )
-    
-    owner_id = serializers.IntegerField(source="owner.id", read_only = True)
-    member_count = serializers.SerializerMethodField()
-    ticket_count = serializers.SerializerMethodField()
-    tasks_to_do_count = serializers.SerializerMethodField()
-    tasks_high_prio_count = serializers.SerializerMethodField()
-    tasks = TaskSerializer(many = True, read_only = True)
+    owner_data = SimpleUserSerializer(source="owner", read_only=True)
+    members_data = SimpleUserSerializer(source="members", many=True, read_only=True)
+
     
     class Meta:
         model = Board
         fields = [
             "id",
             "title",
-            "members",
-            "tasks",
-            "owner_id",
-            "member_count",
-            "ticket_count",
-            "tasks_to_do_count",
-            "tasks_high_prio_count"
-        ]
-        read_only_fields = [
-            "owner_id",
-            "member_count",
-            "ticket_count",
-            "tasks_to_do_count",
-            "tasks_high_prio_count"
+            "owner_data",
+            "members_data",
         ]
         
     def create(self, validated_data):
@@ -62,31 +51,11 @@ class BoardSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         members = validated_data.pop("members", None)
-        
-        for attr, value in validated_data.items():
+        for attr,value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
         if members is not None:
             instance.members.set(members)
-            
         return instance
     
-    def get_member_count(self, obj):
-        return obj.members.count()
-    
-    def get_ticket_count(self, obj):
-        return obj.tasks.count()
-    
-    def get_tasks_to_do_count(self, obj):
-        return obj.tasks.filter(status="to-do").count()
-    
-    def get_tasks_high_prio_count(self, obj):
-        return obj.tasks.filter(priority="high").count()
-    
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        members_qs = instance.members.all()
-        data["members"] = UserEmailSerializer(members_qs, many = True).data
-        return data
     
