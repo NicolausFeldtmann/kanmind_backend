@@ -11,3 +11,6 @@ class UserProfile(models.Model):
     
     def fullname(self):
         return f"{self.first_name} {self.last_name}".strip()
+    
+    def __str__(self):
+        return self.username or (self.user.username if self.user_id else str(self.pk))

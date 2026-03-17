@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .serializers import UserEmailSerializer
+from .permissions import IsStaffOrReadOnly, IsAdminForDeleteOrPatchAndReadOnly, IsOwnerOrAdmin
 
 User = get_user_model()
 
@@ -10,6 +11,7 @@ User = get_user_model()
 class UserEmailViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserEmailSerializer
+    permission_classes = [IsAdminForDeleteOrPatchAndReadOnly]
     
     # Checks if the specified email address exists. If not, an error message will be returned.
     def list(self, request, *args, **kwargs):

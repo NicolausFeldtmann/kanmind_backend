@@ -14,7 +14,7 @@ class BoardList(generics.ListCreateAPIView):
     
     def get_queryset(self):
         user = self.request.user
-        return Board.objects.filter(members = user) | Board.objects.filter(owner = user)
+        return Board.objects.filter(members = user) | Board.objects.filter(owner = user).prefetch_related('tasks', 'members')
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -31,7 +31,7 @@ class BoardList(generics.ListCreateAPIView):
 
 # View suports GET, POST/UPDATE and DELETE request for single board.
 class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Board.objects.all()
+    queryset = Board.objects.all().prefetch_related('tasks', 'members')
     serializer_class = BoardSerializer
     permission_classes = [IsAuthenticated, IsBoardMember]
     

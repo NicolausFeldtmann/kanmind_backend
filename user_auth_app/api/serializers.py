@@ -1,6 +1,7 @@
 from django.utils.text import slugify
 from rest_framework import serializers
 from user_auth_app.models import UserProfile
+from email_app.models import UserEmail
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 
@@ -49,22 +50,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
             username = f"{base_name}{counter}"
             counter += 1
         
-        user = User(
-            first_name = first_name,
-            last_name = last_name,
-            email = email,
-            username = username            
-        )
+        user = User(first_name=first_name, last_name=last_name, email=email, username=username)
         user.set_password(password)
         user.save()
         
-        UserProfile.objects.create(
-            user = user,
-            first_name = first_name,
-            last_name = last_name,
-            username = username,
-            email = email
-        )
+        UserProfile.objects.create(user=user, first_name=first_name, last_name=last_name, username=username, email=email)
+        UserEmail.objects.create(user=user, username=username, email=email)
         return user
     
 class EmailAuthSerializer(serializers.Serializer):
