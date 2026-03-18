@@ -20,7 +20,7 @@ class UserEmailViewSet(viewsets.ReadOnlyModelViewSet):
             try:
                 user = User.objects.get(email__iexact=email)
             except User.DoesNotExist:
-                return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "Email not found"}, status=status.HTTP_404_NOT_FOUND)
             serializer = self.get_serializer(user)
             return Response(serializer.data)
         queryset = self.get_queryset()
