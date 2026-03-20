@@ -12,31 +12,29 @@ class BoardUserSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "fullname"]
 
 class BoardSerializer(serializers.ModelSerializer):
-    members = serializers.PrimaryKeyRelatedField(
-        queryset = User.objects.all(),
-        many = True,
-        required = False
-    )
+    # members = serializers.PrimaryKeyRelatedField(
+    #     queryset = User.objects.all(),
+    #     many = True,
+    #     required = False
+    # )
     
     owner_id = serializers.IntegerField(source="owner.id", read_only = True)
     member_count = serializers.SerializerMethodField()
     ticket_count = serializers.SerializerMethodField()
     tasks_to_do_count = serializers.SerializerMethodField()
     tasks_high_prio_count = serializers.SerializerMethodField()
-    tasks = TaskSerializer(many = True, read_only = True)
+    #tasks = TaskSerializer(many = True, read_only = True)
     
     class Meta:
         model = Board
         fields = [
             "id",
             "title",
-            "members",
-            "tasks",
-            "owner_id",
             "member_count",
             "ticket_count",
             "tasks_to_do_count",
-            "tasks_high_prio_count"
+            "tasks_high_prio_count",
+            "owner_id",
         ]
         read_only_fields = [
             "owner_id",
@@ -84,9 +82,19 @@ class BoardSerializer(serializers.ModelSerializer):
     def get_tasks_high_prio_count(self, obj):
         return obj.tasks.filter(priority="high").count()
     
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        members_qs = instance.members.all()
-        data["members"] = UserEmailSerializer(members_qs, many = True).data
-        return data
+class BoardDetailSerializer(BoardSerializer):
+    members = UserEmailSerializer(many=True, read_only=True)
+    tasks = TaskSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Board
+        fields = [
+            "id",
+            "title",
+            "owner_id",
+            "members",
+            "tasks"
+        ]
+        read_only_fields = ["owner_id", "members", "tasks"]
+        
     

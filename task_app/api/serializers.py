@@ -58,11 +58,11 @@ class TaskSerializer(serializers.ModelSerializer):
             "description",
             "status",
             "priority",
-            "due_date",
             "assignee",
             "reviewer",
             "assignee_id",
             "reviewer_id",
+            "due_date",
             "comments_count"
         ]
         

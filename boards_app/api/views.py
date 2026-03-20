@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from boards_app.models import Board
-from .serializers import BoardSerializer
+from .serializers import BoardSerializer, BoardDetailSerializer
 from .permissions import IsBoardMember
 
 # View suports GET and POST request for board list.
@@ -32,7 +32,7 @@ class BoardList(generics.ListCreateAPIView):
 # View suports GET, POST/UPDATE and DELETE request for single board.
 class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Board.objects.all().prefetch_related('tasks', 'members')
-    serializer_class = BoardSerializer
+    serializer_class = BoardDetailSerializer
     permission_classes = [IsAuthenticated, IsBoardMember]
     
     def retrieve(self, request, *args, **kwargs):
@@ -69,4 +69,4 @@ class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
         self.perform_destroy(obj)
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)

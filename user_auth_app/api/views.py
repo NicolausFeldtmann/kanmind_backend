@@ -26,10 +26,9 @@ class RegistrationView(APIView):
             fullname = f"{user.first_name} {user.last_name}".strip()
             data = {
                 "token": token.key,
-                "user_id": user.id,
-                "username": user.username,
+                "fullname": fullname,
                 "email": user.email,
-                "fullname": fullname
+                "user_id": user.id,
             }
             return Response(data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -48,7 +47,7 @@ class CustomLoginView(ObtainAuthToken):
             user = serializer.validated_data["user"]
             token, create = Token.objects.get_or_create(user = user)
             fullname = f"{user.first_name} {user.last_name}"
-            data = {"token": token.key, "user_id": user.id, "username": user.username, "email": user.email, "fullname": fullname}
+            data = {"token": token.key, "fullname": fullname, "email": user.email, "user_id": user.id}
         else:
             return Response({"error": "Wrong emai or password"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
