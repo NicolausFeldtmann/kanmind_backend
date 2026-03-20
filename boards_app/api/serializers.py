@@ -83,7 +83,8 @@ class BoardSerializer(serializers.ModelSerializer):
         return obj.tasks.filter(priority="high").count()
     
 class BoardDetailSerializer(BoardSerializer):
-    members = UserEmailSerializer(many=True, read_only=True)
+    owner_data = UserEmailSerializer(source="owner", read_only=True)
+    members_data = UserEmailSerializer(source="members", many=True, read_only=True)
     tasks = TaskSerializer(many=True, read_only=True)
     
     class Meta:
@@ -91,10 +92,9 @@ class BoardDetailSerializer(BoardSerializer):
         fields = [
             "id",
             "title",
-            "owner_id",
-            "members",
+            "owner_data",
+            "members_data",
             "tasks"
         ]
-        read_only_fields = ["owner_id", "members", "tasks"]
         
     

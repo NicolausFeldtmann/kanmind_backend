@@ -68,7 +68,7 @@ class TaskReviewerList(generics.ListAPIView):
         if not user.is_authenticated:
             return Task.objects.none()
         return(
-            Task.objects.filter(reviwer = user)
+            Task.objects.filter(reviewer = user)
             .select_related("assignee", "reviewer", "board")
             .annotate(comments_count = Count("comments", distinct=True))
         )
