@@ -1,21 +1,34 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied, NotFound
 from django.db.models import Count
 from task_app.models import Task, Comment
 from boards_app.models import Board
 from .serializers import TaskSerializer, CommentSerializer
+from .permissions import IsBoardMember, IsOwnerOrAdmin
 
 class TaskListView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsBoardMember]
     
     def get_queryset(self):
-        return (
+        user = self.request.user
+        board_id = self.request.query_params.get("board")
+        qs = (
             Task.objects.all()
             .select_related("assignee", "reviewer", "board")
-            .annotate(comments_count = Count("comments", distinct=True))
+            .annotate(comments_count=Count("comments", distinct=True))
         )
+        if board_id:
+            try:
+                board = Board.objects.get(pk=board_id)
+            except Board.DoesNotExist:
+                return Task.objects.none()
+            if not board.members.filter(pk=user.pk).exists() and board.owner_id != user.pk and not (user.is_staff or user.Is_superuser):
+                raise PermissionDenied("Acces denied")
+            return qs.filter(board_id=board_id)
+        return qs.filter(board__members=user) | qs.filter(board__owner=user)
         
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data =request.data)
@@ -38,7 +51,7 @@ class TaskListView(generics.ListCreateAPIView):
         
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsBoardMember]
     
     def get_queryset(self):
         return (
@@ -79,20 +92,31 @@ class CommentListCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         task_id = self.kwargs["task_id"]
-        return Comment.objects.filter(task_id = task_id).order_by("created_at")
-    
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx["request"] = self.request
-        return ctx
+        try:
+            task = Task.objects.select_related("board").get(pk=task_id)
+        except Task.DoesNotExist:
+            raise NotFound("Task not found")
+        board = task.board
+        user = self.request.user
+        if not (user.is_superuser or user.is_staff or board.owner_id == user.id or board.members.filter(pk=user.pk).exists()):
+            raise PermissionDenied("Access deneid")
+        return Comment.objects.filter(task_id=task_id).order_by("created_at")
     
     def perform_create(self, serializer):
         task_id = self.kwargs["task_id"]
-        serializer.save(task_id = task_id)
+        try:
+            task = Task.objects.select_related("board").get(pk=task_id)
+        except Task.DoesNotExist:
+            raise NotFound("Task not found")
+        board = task.board
+        user = self.request.user
+        if not (user.is_superuser or user.is_staff or board.owner_id == user.id or board.members.filter(pk=user.pk).exists()):
+            raise PermissionDenied("Access deneid")
+        serializer.save(task_id=task_id)
         
 class CommentDeleteView(generics.DestroyAPIView):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
     lookup_url_kwarg = "comment_id"
     
     def get_queryset(self):

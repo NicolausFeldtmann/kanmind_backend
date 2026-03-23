@@ -1,4 +1,6 @@
 from django.utils.text import slugify
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from user_auth_app.models import UserProfile
 from email_app.models import UserEmail
@@ -27,8 +29,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
         
     def validate_email(self, value):
-        if User.objects.filter(email__iexact = value).exists():
-            raise serializers.ValidationError({"Email already in use."})
+        try:
+            validate_email(value)
+        except ValidationError:
+            raise serializers.ValidationError("Invalid email.")
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("Email already in use.")
         return value
     
     def validate(self, data):

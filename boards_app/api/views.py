@@ -19,7 +19,7 @@ class BoardList(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
-            return Response({"error": serializer.errors}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             self.perform_create(serializer)
