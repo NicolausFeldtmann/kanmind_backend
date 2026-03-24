@@ -25,7 +25,7 @@ class TaskListView(generics.ListCreateAPIView):
                 board = Board.objects.get(pk=board_id)
             except Board.DoesNotExist:
                 return Task.objects.none()
-            if not board.members.filter(pk=user.pk).exists() and board.owner_id != user.pk and not (user.is_staff or user.Is_superuser):
+            if not board.members.filter(pk=user.pk).exists() and board.owner_id != user.pk and not (user.is_staff or user.is_superuser):
                 raise PermissionDenied("Acces denied")
             return qs.filter(board_id=board_id)
         return qs.filter(board__members=user) | qs.filter(board__owner=user)

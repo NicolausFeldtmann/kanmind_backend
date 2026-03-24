@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.exceptions import NotFound
 from boards_app.models import Board
 from task_app.models import Task
 
@@ -36,7 +37,7 @@ class IsBoardMember(BasePermission):
         try:
             board = Board.objects.get(pk = board_id)
         except Board.DoesNotExist:
-            return False
+            raise NotFound("Board not found")
         if user.is_superuser or user.is_staff:
             return True
         if board.owner_id == user.id:
