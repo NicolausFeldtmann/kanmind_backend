@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from boards_app.models import Board
-from .serializers import BoardSerializer, BoardDetailSerializer
+from .serializers import BoardSerializer, BoardDetailSerializer, BoardPatchSerializer
 from .permissions import IsBoardMember
 
 # View suports GET and POST request for board list.
@@ -31,42 +31,27 @@ class BoardList(generics.ListCreateAPIView):
 
 # View suports GET, POST/UPDATE and DELETE request for single board.
 class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Board.objects.all().prefetch_related('tasks', 'members')
-    serializer_class = BoardDetailSerializer
+    queryset = Board.objects.all().prefetch_related("tasks", "members")
     permission_classes = [IsAuthenticated, IsBoardMember]
+    serializer_class = BoardSerializer
     
-    def retrieve(self, request, *args, **kwargs):
-        try:
-            obj = self.get_object()
-        except PermissionDenied:
-            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
-        except NotFound:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = self.get_serializer(obj)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return BoardDetailSerializer
+        return BoardSerializer
     
     def update(self, request, *args, **kwargs):
+        partial = kwargs.get("partial", False)
+        
         try:
             obj = self.get_object()
         except PermissionDenied:
-            return Response({"error", "Acces denied"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "Acces denied"}, status=status.HTTP_403_FORBIDDEN)
         except NotFound:
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = self.get_serializer(obj, data = request.data, partial = kwargs.get("partial", False))
-        if serializer.is_valid():
-            self.perform_update(serializer)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
-    
-    def destroy(self, request, *args, **kwargs):
-        try:
-            obj = self.get_object()
-        except PermissionDenied:
-            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
-        except NotFound:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        self.perform_destroy(obj)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = self.get_serializer(obj, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        response_serializer = BoardPatchSerializer(obj)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)

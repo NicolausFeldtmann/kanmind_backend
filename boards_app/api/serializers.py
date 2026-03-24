@@ -87,4 +87,20 @@ class BoardDetailSerializer(BoardSerializer):
             "tasks",
         ]
         
+class BoardOwnerSerializer(serializers.ModelSerializer):
+    fullname = serializers.SerializerMethodField()
     
+    class Meta:
+        model = User
+        fields = ["id", "email", "fullname"]
+        
+    def get_fullname(self, obj):
+        return obj.get_full_name() or obj.username
+    
+class BoardPatchSerializer(serializers.ModelSerializer):
+    owner_data = BoardOwnerSerializer(source="owner", read_only=True)
+    members_data = BoardOwnerSerializer(source="members", many=True, read_only=True)
+    
+    class Meta:
+        model = Board
+        fields = ["id", "title", "owner_data", "members_data"]
