@@ -2,7 +2,7 @@ from django.db import models
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, NotFound
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from boards_app.models import Board
 from .serializers import BoardSerializer, BoardDetailSerializer, BoardPatchSerializer
 from .permissions import IsBoardMember

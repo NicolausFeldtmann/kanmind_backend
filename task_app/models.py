@@ -37,7 +37,7 @@ class Comment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="task_comments")
     created_at = models.DateTimeField(auto_now_add=True)
-    content = models.TextField(default="")
+    content = models.TextField()
     
     def __str__(self):
         return f"{self.author.get_full_name() or self.author.username}: {self.content[:20]}"

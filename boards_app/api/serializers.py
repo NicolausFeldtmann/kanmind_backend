@@ -2,7 +2,6 @@ from rest_framework import serializers
 from boards_app.models import Board
 from django.contrib.auth.models import User
 from task_app.api.serializers import TaskSerializer
-from email_app.api.serializers import UserEmailSerializer
 
 class BoardUserSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
