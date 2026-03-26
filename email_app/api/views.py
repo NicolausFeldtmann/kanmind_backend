@@ -8,13 +8,13 @@ from .permissions import IsAdminForDeleteOrPatchAndReadOnly
 
 User = get_user_model()
 
-# View suports GET request
+""" View suports GET requests for authenticated users, and DELETE requests for owner and admin. """
 class UserEmailViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserEmailSerializer
     permission_classes = [IsAdminForDeleteOrPatchAndReadOnly, IsAuthenticated]
     
-    # Checks if the specified email address exists. If not, an error message will be returned.
+    """ Checks if given emailadress already exists. If does not exists, return statuscode 404. """
     def list(self, request, *args, **kwargs):
         email = request.query_params.get("email")
         if email:

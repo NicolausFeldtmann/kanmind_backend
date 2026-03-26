@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+""" Converts all needed fields from incomming data. """
 class UserProfileSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField(read_only = True)
     
@@ -18,7 +19,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         
         def get_full_name(self, obj):
             return obj.full_name()
-        
+
+""" Converts userdata for registration. Validates email and passwords bevor create account. """        
 class RegistrationSerializer(serializers.ModelSerializer):
     repeated_password = serializers.CharField(write_only = True)
     fullname = serializers.CharField(write_only = True)
@@ -27,7 +29,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ["fullname", "email", "password", "repeated_password"]
         extra_kwargs = {"password": {"write_only": True}}
-        
+    
+    """ Validates given email and checks if email is already in use. """    
     def validate_email(self, value):
         try:
             validate_email(value)
@@ -37,11 +40,14 @@ class RegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Email already in use.")
         return value
     
+    """ validates bouth given password. Return error if they don't match. """
     def validate(self, data):
         if data.get("password") != data.get("repeated_password"):
             raise serializers.ValidationError({"Passwords don't match."})
         return data
     
+    """ Creats account. Uses vaildated data and vaildated email and passowrd. """
+    """ Checks if username exists and adds int to username if thats the case. """
     def create(self, validated_data):
         fullname = validated_data.pop("fullname", "").strip()
         parts = fullname.split()
@@ -63,7 +69,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
         UserProfile.objects.create(user=user, first_name=first_name, last_name=last_name, username=username, email=email)
         UserEmail.objects.create(user=user, username=username, email=email)
         return user
-    
+
+""" Validates gieven email and password. Retuns error if one or bouth are not valid. """    
 class EmailAuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(style={"input_type": "password"}, trim_whitespace = False)

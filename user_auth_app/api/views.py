@@ -8,16 +8,16 @@ from django.contrib.auth.models import User
 from user_auth_app.models import UserProfile
 from .serializers import UserProfileSerializer, RegistrationSerializer, EmailAuthSerializer
 
-# View suports GET, POST/UPDATE, DESTROY request for single userprofile. 
+""" View for single userprofile. """ 
 class UserProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
     
-# View suports GET and POST request to registrate userprofile
+""" View for sending POST request for userregistration. Unauthenticated users are allowed. """
 class RegistrationView(APIView):
     permission_classes = [AllowAny]
     
-    # Post request that returns created informations or bad request status.
+    """ POST userdata if valid. Retruns token, fullname, email and id. Retruns statuscodes depending validation. """
     def post(self, request):
         serializer = RegistrationSerializer(data = request.data)
         if serializer.is_valid():
@@ -33,12 +33,12 @@ class RegistrationView(APIView):
             return Response(data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-# View suports POST request to log in.
+""" View for login. Allows unauthenticated users. """
 class CustomLoginView(ObtainAuthToken):
     permission_classes = [AllowAny]
     serializer_class = EmailAuthSerializer
     
-    # Post request that returns infromations containing Authtoken, if login attempt is valid.
+    """ POST if data from EmailAuthSerializer are valid. Gets or creats token. Return statuscods depending validation. """
     def post(self, request):
         serializer = self.serializer_class(data = request.data)
         
@@ -52,11 +52,12 @@ class CustomLoginView(ObtainAuthToken):
             return Response({"error": "Wrong emai or password"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
     
-# View suports GEr requests
+""" View returns userdata related to email. """
 class CheckEmailView(APIView):
     permission_classes = [IsAuthenticated]
     
-    # Get request returns name, email, id if email exists. Returns error else.
+    """ Return userdata containing id, email and fullname, if given email exists in DB. """
+    """ Returns statuscodes depending email exists or not. """
     def get(self, request):
         email = request.query_params.get("email")
         if not email:

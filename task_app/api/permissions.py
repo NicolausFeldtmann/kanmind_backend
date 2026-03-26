@@ -2,35 +2,12 @@ from task_app.models import Task
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.exceptions import NotFound
 from boards_app.models import Board
-
-class IsStaffOrReadOnly(BasePermission):
-    
-    def has_permission(self, request, view):
-        is_staff = bool(request.user and request.user.is_staff)
-        return is_staff or request.method in SAFE_METHODS
-    
-class IsAdminForDeleteOrPatchAndReadOnly(BasePermission):
-    
-    def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        elif request.method == "DELETE":
-            return bool(request.user and request.user.is_superuser)
-        else:
-            return bool(request.user and request.user.is_staff)
         
-class IsOwnerOrAdmin(BasePermission):
-    
-    def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        elif request.method == "DELETE":
-            return bool(request.user and request.user.is_superuser)
-        else:
-            return bool(request.user and request.user == obj.user)
-        
+""" Custom permission class. Checks if user is board member or owner. """
+""" Get board in relation to task. """
 class IsBoardMember(BasePermission):
     
+    """ Function detects if user is board member or owner """
     def is_member_of_board(self, user, board_id):
         if not user or not user.is_authenticated:
             return False
@@ -44,6 +21,7 @@ class IsBoardMember(BasePermission):
             return True
         return board.members.filter(pk=user.pk).exists()
     
+    """ Get tasks ids """
     def get_task_id(self, view):
         kwargs = getattr(view, "kwargs", {}) or {}
         for key in ("task_id", "taskId", "pk", "id"):
@@ -60,9 +38,11 @@ class IsBoardMember(BasePermission):
                 continue
         return None
     
+    """ Function to get board ids. """
     def get_board_id(self, request):
         return request.query_params.get("board") or request.data.get("board")
     
+    """ Defines permission for authenticated users. Returns statuscode 404 if Task didn't exists. """
     def has_permission(self, request, view):
         task_id = self.get_task_id(view)
         if task_id:
@@ -86,6 +66,7 @@ class IsBoardMember(BasePermission):
         
         return bool(request.user and request.is_authenticated)
     
+    """ Defines permissions for staff, admin, and owner. """
     def has_object_permission(self, request, view, obj):
         user = request.user
         if not user or not user.is_authenticated:

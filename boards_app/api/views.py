@@ -7,15 +7,17 @@ from boards_app.models import Board
 from .serializers import BoardSerializer, BoardDetailSerializer, BoardPatchSerializer
 from .permissions import IsBoardMember
 
-# View suports GET and POST request for board list.
+""" View performs GET request for board list and POST request for a new board. User must be authenticated"""
 class BoardList(generics.ListCreateAPIView):
     serializer_class = BoardSerializer
     permission_classes = [IsAuthenticated]
     
+    """ Filters all boards user is member or owner. Prefetch of tasks an members. """
     def get_queryset(self):
         user = self.request.user
         return Board.objects.filter(members = user) | Board.objects.filter(owner = user).prefetch_related('tasks', 'members')
     
+    """ Posts validated data to create board. Catches validation and/or server errors. """
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
@@ -29,17 +31,19 @@ class BoardList(generics.ListCreateAPIView):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-# View suports GET, POST/UPDATE and DELETE request for single board.
+""" View for single boards. User musst be owner or member. """
 class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Board.objects.all().prefetch_related("tasks", "members")
     permission_classes = [IsAuthenticated, IsBoardMember]
     serializer_class = BoardSerializer
     
+    """ Uses BoardDetailSerializer for GET requests, else BoardSerializer """
     def get_serializer_class(self):
         if self.request.method == "GET":
             return BoardDetailSerializer
         return BoardSerializer
     
+    """ Update function. Detects if user is authoricated and data are valid. """
     def update(self, request, *args, **kwargs):
         partial = kwargs.get("partial", False)
         

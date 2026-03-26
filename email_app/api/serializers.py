@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# Serializer for defining UserEmail
+""" Serializer to konvert incommig data to user_email """
 class UserEmailSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
     
