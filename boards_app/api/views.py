@@ -15,7 +15,7 @@ class BoardList(generics.ListCreateAPIView):
     """ Filters all boards user is member or owner. Prefetch of tasks an members. """
     def get_queryset(self):
         user = self.request.user
-        return Board.objects.filter(members = user) | Board.objects.filter(owner = user).prefetch_related('tasks', 'members')
+        return Board.objects.filter(members=user) | Board.objects.filter(owner=user).prefetch_related('tasks', 'members')
     
     """ Posts validated data to create board. Catches validation and/or server errors. """
     def create(self, request, *args, **kwargs):

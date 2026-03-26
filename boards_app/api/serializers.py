@@ -16,7 +16,7 @@ class BoardUserSerializer(serializers.ModelSerializer):
 
 """ Main serializer for boards. With several fields and counters """
 class BoardSerializer(serializers.ModelSerializer):
-    owner_id = serializers.IntegerField(source="owner.id", read_only = True)
+    owner_id = serializers.IntegerField(source="owner.id", read_only=True)
     member_count = serializers.SerializerMethodField()
     ticket_count = serializers.SerializerMethodField()
     tasks_to_do_count = serializers.SerializerMethodField()
@@ -46,10 +46,10 @@ class BoardSerializer(serializers.ModelSerializer):
         members = validated_data.pop("members", [])
         request = self.context.get("request")
         owner = request.user if request else None
-        board = Board.objects.create(owner = owner, **validated_data)
+        board = Board.objects.create(owner=owner, **validated_data)
         if members:
             board.members.set(members)
-        if owner and not board.members.filter(pk = owner.pk).exists():
+        if owner and not board.members.filter(pk=owner.pk).exists():
             board.members.add(owner)
         return board
     

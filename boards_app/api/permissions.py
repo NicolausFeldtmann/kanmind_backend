@@ -3,7 +3,7 @@ from rest_framework.permissions import BasePermission,  SAFE_METHODS
 """ Custom permission class. Differentiated acces of user and boardmembers """
 class IsBoardMember(BasePermission):
     
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, obj):
         user = request.user
         if not user or not user.is_authenticated:
             return False

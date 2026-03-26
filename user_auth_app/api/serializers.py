@@ -58,7 +58,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         base_name = slugify(f"{first_name} {last_name}") or slugify(email.split("@")[0])
         username = base_name
         counter = 1
-        while User.objects.filter(username = username).exists():
+        while User.objects.filter(username=username).exists():
             username = f"{base_name}{counter}"
             counter += 1
         
@@ -73,14 +73,14 @@ class RegistrationSerializer(serializers.ModelSerializer):
 """ Validates gieven email and password. Retuns error if one or bouth are not valid. """    
 class EmailAuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(style={"input_type": "password"}, trim_whitespace = False)
+    password = serializers.CharField(style={"input_type": "password"}, trim_whitespace=False)
     
     def validate(self, attrs):
         email = attrs.get("email")
         password = attrs.get("password")
         
         try:
-            user = User.objects.get(email__iexact = email)
+            user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             raise serializers.ValidationError({"invalid access"})
         if not user.check_password(password):
