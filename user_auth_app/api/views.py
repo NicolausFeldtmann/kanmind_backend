@@ -40,7 +40,7 @@ class CustomLoginView(ObtainAuthToken):
     
     """ POST if data from EmailAuthSerializer are valid. Gets or creats token. Return statuscods depending validation. """
     def post(self, request):
-        serializer = self.serializer_class(data = request.data)
+        serializer = self.serializer_class(data=request.data)
         
         data ={}
         if serializer.is_valid():
@@ -49,7 +49,7 @@ class CustomLoginView(ObtainAuthToken):
             fullname = f"{user.first_name} {user.last_name}"
             data = {"token": token.key, "fullname": fullname, "email": user.email, "user_id": user.id}
         else:
-            return Response({"error": "Wrong emai or password"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Wrong email or password"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
     
 """ View returns userdata related to email. """

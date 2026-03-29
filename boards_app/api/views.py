@@ -28,7 +28,6 @@ class BoardList(generics.ListCreateAPIView):
         except Exception:
             return Response({"error": "Intern serverproblem"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-        headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 """ View for single boards. User musst be owner or member. """
@@ -47,13 +46,7 @@ class BoardDetail(generics.RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
         partial = kwargs.get("partial", False)
         
-        try:
-            obj = self.get_object()
-        except PermissionDenied:
-            return Response({"error": "Acces denied"}, status=status.HTTP_403_FORBIDDEN)
-        except NotFound:
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+        obj = self.get_object()
         serializer = self.get_serializer(obj, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
