@@ -105,12 +105,17 @@ sqlparse: 0.5.5
    - Unix/MacOS: 
 4. Install dependencies:
 
+- Windows:
 ```
 python -m venv venv
-
 venv\Scripts\activate
-source venv/bin/activate
+pip install -r requirements.txt
+```
 
+-Unix/MacOS:
+```
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
