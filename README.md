@@ -98,12 +98,12 @@ sqlparse: 0.5.5
 ## 🛠️ Development Setup
 
 ### Python Setup
-1. Install Python (v3.8+ recommended)
-2. Create a virtual environment: `python -m venv venv`
+1. Install Python (v3.12+ recommended)
+2. Create a virtual environment: ```python -m venv venv```
 3. Activate the environment:
-   - Windows: `venv\Scripts\activate`
-   - Unix/MacOS: `source venv/bin/activate`
-4. Install dependencies: `pip install -r requirements.txt`
+   - Windows: ```venv\Scripts\activate```
+   - Unix/MacOS: ```source venv/bin/activate```
+4. Install dependencies: ```pip install -r requirements.txt```
 
 
 ## 👥 Contributing
