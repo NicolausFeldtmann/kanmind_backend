@@ -1,7 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied, NotFound
 from django.db.models import Count
 from task_app.models import Task, Comment
 from boards_app.models import Board
@@ -30,7 +29,7 @@ class TaskListView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception = True)
         self.perform_create(serializer)
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def perform_create(self, serializer, board = None):
         board_id =  self.request.data.get("board")
