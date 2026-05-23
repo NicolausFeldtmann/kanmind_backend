@@ -141,4 +141,4 @@ git push origin feature/your-feature
 Please ensure your code follows the project's style guidelines and includes tests where applicable.
 
 ---
-*This README was generated with ❤️ by ReadmeBuddy*
+Made by Nicolaus Feldtmann
