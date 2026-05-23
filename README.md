@@ -107,14 +107,14 @@ sqlparse: 0.5.5
 
 - Windows:
 ```
-python -m venv venv
+python -m venv env
 venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 - Unix/MacOS:
 ```
-python -m venv venv
+python -m venv env
 source venv/bin/activate
 pip install -r requirements.txt
 ```
